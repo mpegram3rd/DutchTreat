@@ -1,4 +1,6 @@
 ﻿using DutchTreat.Data.Entities;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -48,9 +50,37 @@ namespace DutchTreat.Data
             }
         }
 
+        public IEnumerable<Order> GetAllOrders()
+        {
+            try
+            {
+                return _ctx.Orders
+                    .Include(o => o.Items)
+                    .ThenInclude(i => i.Product)
+                    .OrderBy(o => o.OrderDate)
+                    .ToList();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Failed to get all orders: {ex}");
+                return new List<Order>();
+            }
+        }
+
+        public Order GetOrderById(int id)
+        {
+            return _ctx.Orders
+                .Include(o => o.Items)
+                .ThenInclude(i => i.Product)
+                .Where(o => o.Id == id)
+                .OrderBy(o => o.OrderDate)
+                .FirstOrDefault();
+
+        }
         public bool SaveAll()
         {
             return _ctx.SaveChanges() > 0;
         }
     }
+
 }
